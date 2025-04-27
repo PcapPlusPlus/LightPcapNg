@@ -1,7 +1,7 @@
-// test_histogram.c
-// Created on: Sep 30, 2016
+// light_null_compression.c
+// Created on: Aug 13, 2019
 
-// Copyright (c) 2016 Radu Velea
+// Copyright (c) 2019 TMEIC Corporation - Robert Kriener
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,44 +21,21 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "light_pcapng.h"
+#include "light_compression.h"
+#include "light_null_compression.h"
+#include "light_compression_functions.h"
+#include "light_file.h"
 
-#include <stdio.h>
-#include <stdlib.h>
 
-static uint32_t key_master(const light_pcapng pcapng)
-{
-	uint32_t type = LIGHT_UNKNOWN_DATA_BLOCK;
-	light_get_block_info(pcapng, LIGHT_INFO_TYPE, &type, NULL);
-	return type;
-}
+#if defined(USE_NULL_COMPRESSION)
 
-int main(int argc, const char **args) {
-	int i;
+_compression_t * (*get_compression_context_ptr)(int) = NULL;
+void(*free_compression_context_ptr)(_compression_t*) = NULL;
+_decompression_t * (*get_decompression_context_ptr)() = NULL;
+void(*free_decompression_context_ptr)(_decompression_t*) = NULL;
+int(*is_compressed_file)(const char*) = NULL;
+size_t(*read_compressed)(struct light_file_t *, void *, size_t) = NULL;
+size_t(*write_compressed)(struct light_file_t *, const void *, size_t) = NULL;
+int(*close_compressed)(struct light_file_t *) = NULL;
 
-	for (i = 1; i < argc; ++i) {
-		const char *file = args[i];
-		light_pcapng pcapng = light_read_from_path(file);
-		if (pcapng != NULL) {
-			light_pair *histogram;
-			size_t length = 0;
-			size_t uncounted = 0;
-			size_t i;
-			light_pcapng_historgram(pcapng, key_master, &histogram, &length, &uncounted);
-
-			printf("Histogram for %s: %zu classes, %zu items rejected. See <key, value> below:\n", file, length, uncounted);
-			for (i = 0; i < length; ++i) {
-				printf("<0x%8X, %12u>\n", histogram[i].key, histogram[i].val);
-			}
-			printf("\n");
-
-			free(histogram);
-			light_pcapng_release(pcapng);
-		}
-		else {
-			fprintf(stderr, "Unable to read pcapng: %s\n", file);
-		}
-	}
-
-	return 0;
-}
+#endif

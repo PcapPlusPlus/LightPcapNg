@@ -34,7 +34,7 @@ light_pcapng light_read_from_path(const char *file_name)
 	light_pcapng head;
 	uint32_t *memory;
 	size_t size = 0;
-	__fd_t fd = light_open(file_name, LIGHT_OREAD);
+	light_file fd = light_open(file_name, LIGHT_OREAD);
 	DCHECK_ASSERT_EXP(fd != NULL, "could not open file", return NULL);
 
 	size = light_size(fd);
@@ -60,22 +60,37 @@ light_pcapng light_read_from_path(const char *file_name)
 
 int light_pcapng_to_file(const char *file_name, const light_pcapng pcapng)
 {
-	size_t size;
-	uint32_t *data = light_pcapng_to_memory(pcapng, &size);
-	__fd_t fd = light_open(file_name, LIGHT_OWRITE);
-
-	light_write(fd, data, size);
-	light_close(fd);
-	free(data);
-	return LIGHT_SUCCESS;
+	light_file fd = light_open(file_name, LIGHT_OWRITE);
+	size_t written = 0;
+	if (fd)
+	{
+		written = light_pcapng_to_file_stream(pcapng, fd);
+		light_close(fd);
+	}
+	return written > 0 ? LIGHT_SUCCESS : LIGHT_FAILURE;
 }
+
+int light_pcapng_to_compressed_file(const char *file_name, const light_pcapng pcapng, int compression_level)
+{
+	light_file fd = light_open_compression(file_name, LIGHT_OWRITE, compression_level);
+	size_t written = 0;
+
+	if (fd)
+	{
+		written = light_pcapng_to_file_stream(pcapng, fd);
+		light_close(fd);
+	}
+
+	return written > 0 ? LIGHT_SUCCESS : LIGHT_FAILURE;
+}
+
 
 light_pcapng_stream light_open_stream(const char *file_name)
 {
 	light_pcapng_stream pcapng = calloc(1, sizeof(struct _light_pcapng_stream));
-	pcapng->stream.fd = light_open(file_name, LIGHT_OREAD);
+	pcapng->file = light_open(file_name, LIGHT_OREAD);
 
-	if (pcapng->stream.fd == NULL) {
+	if (pcapng->file == NULL) {
 		free(pcapng);
 		return NULL;
 	}
@@ -99,8 +114,8 @@ light_pcapng light_read_stream(light_pcapng_stream pcapng)
 		pcapng->current_block = NULL;
 	}
 
-	if (light_read(pcapng->stream.fd, &block_type, sizeof(block_type)) == -1 ||
-			light_read(pcapng->stream.fd, &block_total_length, sizeof(block_total_length)) == -1) {
+	if (light_read(pcapng->file, &block_type, sizeof(block_type)) == -1 ||
+			light_read(pcapng->file, &block_total_length, sizeof(block_total_length)) == -1) {
 		pcapng->valid = 0;
 		return NULL;
 	}
@@ -114,7 +129,7 @@ light_pcapng light_read_stream(light_pcapng_stream pcapng)
 	block_data[0] = block_type;
 	block_data[1] = block_total_length;
 
-	if (light_read(pcapng->stream.fd, &block_data[2], block_total_length - 2 * sizeof(uint32_t)) == -1) {
+	if (light_read(pcapng->file, &block_data[2], block_total_length - 2 * sizeof(uint32_t)) == -1) {
 		free(block_data);
 		pcapng->valid = 0;
 		return NULL;
@@ -137,11 +152,9 @@ int light_close_stream(light_pcapng_stream pcapng)
 		pcapng->current_block = NULL;
 	}
 
-	light_close(pcapng->stream.fd);
+	light_close(pcapng->file);
 	pcapng->valid = 0;
 	free(pcapng);
 
 	return LIGHT_SUCCESS;
 }
-
-
