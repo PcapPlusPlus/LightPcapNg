@@ -10,4 +10,6 @@
 *.cap
 *.ntar
 *.log
-*.cmake
+build/*
+cmake-*/*
+.idea/*
