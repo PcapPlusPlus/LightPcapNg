@@ -55,11 +55,13 @@ if(LIGHT_PCAPNG_ZSTD)
   elseif(ZSTD_VERSION_STRING VERSION_LESS "1.4.0")
       message(FATAL_ERROR "ZSTD >= 1.4.0 required!")
   endif()
+  # TODO: is it needed?
   add_definitions(-DUSE_Z_STD)
 
-    # Linking with objects required CMake 3.12
+  # Linking with objects required CMake 3.12
   cmake_minimum_required(VERSION 3.12)
   target_link_libraries(light_pcapng PUBLIC ZSTD::ZSTD)
+  target_compile_definitions(light_pcapng PUBLIC -DUSE_Z_STD)
 endif()
 
 if(LIGHT_PCAPNG_TESTS)
