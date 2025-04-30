@@ -45,7 +45,7 @@ target_compile_definitions(light_pcapng PUBLIC -DUNIVERSAL)
 
 target_include_directories(
   light_pcapng
-  PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  PUBLIC $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 if(LIGHT_PCAPNG_ZSTD)
