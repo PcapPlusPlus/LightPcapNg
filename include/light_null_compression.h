@@ -1,7 +1,7 @@
-// test_histogram.c
-// Created on: Sep 30, 2016
+// light_null_compression.h
+// Created on: Aug 13, 2019
 
-// Copyright (c) 2016 Radu Velea
+// Copyright (c) 2019 TMEIC Corporation - Robert Kriener
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,44 +21,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "light_pcapng.h"
+#ifndef INCLUDE_LIGHT_NULL_COMPRESSION_H_
+#define INCLUDE_LIGHT_NULL_COMPRESSION_H_
 
-#include <stdio.h>
+#if defined(USE_NULL_COMPRESSION)
+
 #include <stdlib.h>
 
-static uint32_t key_master(const light_pcapng pcapng)
-{
-	uint32_t type = LIGHT_UNKNOWN_DATA_BLOCK;
-	light_get_block_info(pcapng, LIGHT_INFO_TYPE, &type, NULL);
-	return type;
-}
+typedef void _compression_t;
+typedef void _decompression_t;
 
-int main(int argc, const char **args) {
-	int i;
+struct light_file_t;
 
-	for (i = 1; i < argc; ++i) {
-		const char *file = args[i];
-		light_pcapng pcapng = light_read_from_path(file);
-		if (pcapng != NULL) {
-			light_pair *histogram;
-			size_t length = 0;
-			size_t uncounted = 0;
-			size_t i;
-			light_pcapng_historgram(pcapng, key_master, &histogram, &length, &uncounted);
+#endif
 
-			printf("Histogram for %s: %zu classes, %zu items rejected. See <key, value> below:\n", file, length, uncounted);
-			for (i = 0; i < length; ++i) {
-				printf("<0x%8X, %12u>\n", histogram[i].key, histogram[i].val);
-			}
-			printf("\n");
-
-			free(histogram);
-			light_pcapng_release(pcapng);
-		}
-		else {
-			fprintf(stderr, "Unable to read pcapng: %s\n", file);
-		}
-	}
-
-	return 0;
-}
+#endif /* INCLUDE_LIGHT_NULL_COMPRESSION_H_ */

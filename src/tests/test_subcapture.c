@@ -28,6 +28,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifndef PATH_MAX
+	#define PATH_MAX 260
+#endif
+
 static light_boolean subcapture_predicate(const light_pcapng pcapng)
 {
 	uint32_t type = LIGHT_UNKNOWN_DATA_BLOCK;

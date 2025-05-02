@@ -1,7 +1,7 @@
-// test_histogram.c
-// Created on: Sep 30, 2016
+// light_file.h
+// Created on: Aug 13, 2019
 
-// Copyright (c) 2016 Radu Velea
+// Copyright (c) 2019 TMEIC Corporation - Robert Kriener
 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -21,44 +21,23 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#include "light_pcapng.h"
+#ifndef INCLUDE_LIGHT_FILE_H_
+#define INCLUDE_LIGHT_FILE_H_
 
 #include <stdio.h>
-#include <stdlib.h>
+#include "light_compression.h"
 
-static uint32_t key_master(const light_pcapng pcapng)
+typedef _compression_t *light_compression;
+typedef _decompression_t *light_decompression;
+
+typedef struct light_file_t
 {
-	uint32_t type = LIGHT_UNKNOWN_DATA_BLOCK;
-	light_get_block_info(pcapng, LIGHT_INFO_TYPE, &type, NULL);
-	return type;
-}
+	FILE* file;
+	light_compression compression_context;
+	light_decompression decompression_context;
 
-int main(int argc, const char **args) {
-	int i;
+} light_file_t;
 
-	for (i = 1; i < argc; ++i) {
-		const char *file = args[i];
-		light_pcapng pcapng = light_read_from_path(file);
-		if (pcapng != NULL) {
-			light_pair *histogram;
-			size_t length = 0;
-			size_t uncounted = 0;
-			size_t i;
-			light_pcapng_historgram(pcapng, key_master, &histogram, &length, &uncounted);
+typedef light_file_t *light_file;
 
-			printf("Histogram for %s: %zu classes, %zu items rejected. See <key, value> below:\n", file, length, uncounted);
-			for (i = 0; i < length; ++i) {
-				printf("<0x%8X, %12u>\n", histogram[i].key, histogram[i].val);
-			}
-			printf("\n");
-
-			free(histogram);
-			light_pcapng_release(pcapng);
-		}
-		else {
-			fprintf(stderr, "Unable to read pcapng: %s\n", file);
-		}
-	}
-
-	return 0;
-}
+#endif /* INCLUDE_LIGHT_FILE_H_ */
